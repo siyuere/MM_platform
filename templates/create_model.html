@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Model</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h2>Create Model</h2>
+    <form id="modelForm">
+        <label for="parameters">Parameters (JSON format):</label><br>
+        <textarea id="parameters" name="parameters" rows="4" cols="50"></textarea><br><br>
+        <label for="modelName">Model Name:</label><br>
+        <input type="text" id="modelName" name="modelName"><br><br>
+        <input type="submit" value="Create Model">
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $("#modelForm").submit(function(event) {
+                event.preventDefault();
+
+                var parameters = {};
+
+                try {
+                    parameters = JSON.parse($("#parameters").val());
+                } catch (e) {
+                    alert("Invalid JSON format for parameters.");
+                    return;
+                }
+
+                $.ajax({
+                    type: "POST",
+                    url: "/create_model",
+                    contentType: "application/json",
+                    data: JSON.stringify({ parameters: parameters }),
+                    success: function(response) {
+                        alert("Model created successfully.");
+                    },
+                    error: function() {
+                        alert("Error creating model.");
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

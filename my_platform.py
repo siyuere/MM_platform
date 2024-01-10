@@ -1,70 +1,95 @@
+import threading, time
 from flask import Flask, render_template, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from db.models import Session, Task, Model
+from training import run_training, INPUT_PATH, generate_output_path
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'  # Path to the database file
-db = SQLAlchemy(app)
-
-# define the database model
-class TrainingTask(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    created_time = db.Column(db.DateTime, default=datetime.utcnow)
-    status = db.Column(db.String(50), default='pending')
-    parameters = db.Column(db.JSON)  # You can store parameters as JSON
-
-    def __repr__(self):
-        return '<TrainingTask %r>' % self.id
-
-class TrainingResult(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    created_time = db.Column(db.DateTime, default=datetime.utcnow)
-    accuracy = db.Column(db.Float, nullable=True)
-    precision = db.Column(db.Float, nullable=True)
-
-    def __repr__(self):
-        return '<TrainingResult %r>' % self.id
-
-def create_training_task(parameters):
-    """
-    Business Logic:
-    Create a new training task with the given parameters.
-
-    :param parameters: A dictionary containing the parameters for the training task.
-    :return: The created TrainingTask instance.
-    """
-    new_task = TrainingTask(parameters=parameters)
-    db.session.add(new_task)
-    db.session.commit()
-    return new_task
-
-@app.route('/create_task', methods=['POST'])
-def create_task_endpoint():
-    data = request.json
-    parameters = data.get('parameters')
-    new_task = create_training_task(parameters)
-    return jsonify({"message": "Task created", "task_id": new_task.id}), 201
-
-def train_task(id):
-
-
-@app.route('/start_training_task', methods=['POST'])
-def start_training():
-    data = request.json
-    parameters = data.get('parameters', {})
-    # Create and start the training task
-    new_task = create_training_task(parameters)
-    train_task(new_task.id)  # Function to start the training process
-    return jsonify({"message": "Training started", "task_id": new_task.id}), 201
-
-
-
 
 
 @app.route("/")
 @app.route("/home")
 def home():
     return render_template('home.html')
+
+@app.route("/home/train")
+def train():
+    return render_template('training.html')
+
+@app.route("/create_model", methods=['POST'])
+def create_model():
+    session = Session()
+
+    try:
+        data = request.json
+        model_name = data.get("model_name")
+        parameters = data.get("parameters")
+
+        new_model = Model(
+            model_name=model_name,
+            parameters=parameters,
+            creat_time=int(time.time()),
+        )
+
+        session.add(new_model)
+        session.commit()
+        return jsonify({"message": "Model created successfully"})
+    except Exception as e:
+        session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        session.close()
+
+@app.route('/create_task', methods=['POST'])
+def create_task():
+    data = request.json
+    task_name = data.get('task_name')
+    epoches = data.get('epoches')
+    model_id = data.get('model_id')
+
+    session = Session()
+    #training_result = run_training(task_name, parameters, epoches)
+    task = Task(input_path=INPUT_PATH, output_path=generate_output_path(task_name))
+    session.add(task)
+    session.commit()
+    session.close()
+
+    training_thread = threading.Thread(
+        target=training_task_wrapper,
+        args=(task_name, model_id, epoches)
+    )
+    training_thread.start()
+    return jsonify({'code': 200, 'message': 'Success'})
+
+def training_task_wrapper(task_name, model_id, epochs):
+    # Run the training and get results
+    training_results = run_training(task_name, model_id, epochs)
+
+    # Extract the necessary data for saving results
+    accuracy = training_results.get('accuracy', 0)
+    loss = training_results.get('loss', 0)
+
+    # Save the training results to the database
+    save_training_result(task_id, accuracy)
+
+def save_training_result(task_id, accuracy):
+    session = Session()
+
+    try:
+        new_result = TrainingResult(
+            task_id=task_id,
+            accuracy=accuracy,
+        )
+        session.add(new_result)
+        session.commit()
+
+        return new_result.id  # or any other confirmation you want to return
+    except Exception as e:
+        session.rollback()
+        print(f"Error occurred: {e}")
+    finally:
+        session.close()
+
 
 if __name__ == '__main__':
     app.run(debug = True)
