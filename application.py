@@ -15,6 +15,10 @@ def home():
 def train():
     return render_template('training.html')
 
+@app.route("/home/train/predict")
+def predict():
+    return render_template('predict.html')
+
 @app.route("/create_model", methods=['POST'])
 def create_model():
     session = Session()
@@ -48,7 +52,6 @@ def create_task():
     model_id = data.get('model_id')
 
     session = Session()
-    #training_result = run_training(task_name, parameters, epoches)
     task = Task(input_path=INPUT_PATH, output_path=generate_output_path(task_name))
     session.add(task)
     session.commit()
@@ -67,7 +70,6 @@ def training_task_wrapper(task_name, model_id, epochs):
 
     # Extract the necessary data for saving results
     accuracy = training_results.get('accuracy', 0)
-    loss = training_results.get('loss', 0)
 
     # Save the training results to the database
     save_training_result(task_id, accuracy)
@@ -89,6 +91,10 @@ def save_training_result(task_id, accuracy):
         print(f"Error occurred: {e}")
     finally:
         session.close()
+
+@app.route('/make_prediction', methods=['POST'])
+def make_prediction():
+    data = request.json()
 
 
 if __name__ == '__main__':

@@ -22,3 +22,11 @@ CREATE TABLE model_tab (
     creat_time BIGINT NOT NULL,
     model_name VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE prediction_result_tab (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+		path TEXT NOT NULL,
+    model_name VARCHAR(255) NOT NULL,
+    structure VARCHAR(255) NOT NULL,
+    result VARCHAR(255) NOT NULL
+);

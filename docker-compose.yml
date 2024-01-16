@@ -1,0 +1,25 @@
+version: '3.1'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=jdbc:mysql://localhost:3306/
+
+  db:
+    image: mysql:latest  # Use your existing MySQL image here
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: my-secret-pw
+      MYSQL_DATABASE: mm_platform
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

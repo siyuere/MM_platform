@@ -47,5 +47,12 @@ class Model(Base):
     parameters = Column(Text, nullable=False)
     creat_time = Column(BigInteger, nullable=False)
 
+class Prediction(Base):
+    __tablename__ = 'prediction_result_tab'
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    model_name = Column(String(255), nullable=False)
+    structure = Column(Text, nullable=False)
+    result = Column(Text, nullable=False)
 
 Session = sessionmaker(bind=engine)
