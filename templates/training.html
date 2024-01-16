@@ -1,0 +1,37 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Task</title>
+</head>
+<body>
+    <h2>Create Training Task</h2>
+    <form id="taskForm">
+        <input type="text" id="taskName" placeholder="Task1">
+        <input type="number" id="learningRate" placeholder="Learning Rate" step="any">
+        <input type="number" id="epochs" placeholder="Epochs">
+        <button type="submit">Create Task</button>
+    </form>
+
+    <script>
+        document.getElementById('taskForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const taskName = document.getElementById('taskName').value;
+            const learningRate = document.getElementById('learningRate').value;
+            const epochs = document.getElementById('epochs').value;
+
+            fetch('/create_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ task_name: taskName,learning_rate: learningRate, epochs: epochs })
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>
