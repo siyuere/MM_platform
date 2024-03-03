@@ -1,4 +1,4 @@
-from db.models import Task, Session, request
+from db.models import Task, Session, Model, ModelTaskResult
 
 
 def get_all_tasks():
@@ -7,6 +7,13 @@ def get_all_tasks():
     session.close()
     return result
 
+def get_model_info_by_id(model_id):
+    session = Session()
+    return session.query(Model.parameters, Model.parameters).filter(Model.model_id == model_id).first()
+
+def get_model_path_by_id(model_id):
+    session = Session()
+    return session.query(ModelTaskResult.output_path).filter(ModelTaskResult.model_id == model_id).first()
 
 
 

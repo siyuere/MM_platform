@@ -1,14 +1,33 @@
 import os
+import pickle
 from datetime import datetime
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
 
-INPUT_PATH = 'Users/mac/Downloads/UROP_2023_work/featurized_df3.p'
+INPUT_PATH = 'Users/mac/Downloads/UROP_2023_work/featurized_df_mn_ac_pd_pb.p'
 base_directory = '/Users/mac/Downloads/UROP_2023_work/output'
 
-def run_training(task_name, model_id, epoches):
-    dataset = load_dataset(INPUT_PATH)
-    results = train_model(dataset, parameters, epoches)
-    OUTPUT_PATH = generate_output_path(base_directory, task_name=task_name)
-    save_model(results, OUTPUT_PATH)
+
+def train_model(dataset, model_name, parameters, epoches, output_path):
+    if "RandomForestClassifier" in model_name:
+        model = RandomForestClassifier(random_state=1, min_samples_split=5, max_depth=None, min_samples_leaf=2)
+
+    X = dataset.drop(['structure', "composition", 'oxi_state', 'site_symbol','site_composition','structure_idx', 'site_idx'], axis = 1)
+    y = dataset['oxi_state'].values
+
+    accuracy = cross_val_score(model, X, y, scoring='accuracy', cv=5)
+    model.fit(X, y)
+    pickle.dump(model, output_path)
+
+    return accuracy
+
+
+def run_training(task_id, model_name, parameters, epochs, output_path):
+    with open(INPUT_PATH, 'rb') as file:
+        dataset = pickle.load(file)
+
+    results = train_model(dataset, model_name, parameters, epochs, output_path=output_path)
+
     return results
 
 def generate_output_path(task_name):
@@ -30,6 +49,13 @@ def generate_output_path(task_name):
 
     # Return the directory path
     return directory_path
+
+def predict(model_path, structure):
+    with open(model_path, 'rb') as file:
+        model = pickle.load(file)
+    x = structure.drop(['structure', "composition", 'site_symbol','site_composition', 'site_idx'], axis = 1)
+    y = model.predict(x)
+    return y.tolist()
 
 
 
