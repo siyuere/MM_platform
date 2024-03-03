@@ -7,8 +7,8 @@
 <body>
     <h2>Create Training Task</h2>
     <form id="taskForm">
-        <input type="text" id="taskName" placeholder="Task1">
-        <input type="number" id="learningRate" placeholder="Learning Rate" step="any">
+        <input type="text" id="task_name" placeholder="Task 1">
+        <input type="number" id="model_id" placeholder="Model ID">
         <input type="number" id="epochs" placeholder="Epochs">
         <button type="submit">Create Task</button>
     </form>
@@ -17,8 +17,8 @@
         document.getElementById('taskForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const taskName = document.getElementById('taskName').value;
-            const learningRate = document.getElementById('learningRate').value;
+            const task_name = document.getElementById('task_name').value;
+            const model_id = document.getElementById('model_id').value;
             const epochs = document.getElementById('epochs').value;
 
             fetch('/create_task', {
@@ -26,7 +26,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ task_name: taskName,learning_rate: learningRate, epochs: epochs })
+                body: JSON.stringify({ task_name: task_name, model_id: model_id, epochs: epochs })
             })
             .then(response => response.json())
             .then(data => alert(data.message))
